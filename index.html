@@ -5,17 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <title>SellMate AI | Admin Dashboard</title>
+    <style>
+        /* Notebook ပုံစံလေးဖြစ်အောင် Background အစင်းလေး နည်းနည်းထည့်မယ် */
+        .notebook-bg {
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 p-4">
+<body class="bg-slate-900 text-slate-100 p-4 notebook-bg">
 
     <div class="max-w-4xl mx-auto">
+        <!-- Header -->
         <header class="flex justify-between items-center mb-8 bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
             <div>
                 <h1 class="text-2xl font-bold text-emerald-400">SellMate AI Console</h1>
                 <p class="text-sm text-slate-400">Monitoring: sellmate-ai.shop</p>
             </div>
             <div class="text-right">
-                <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs rounded-full border border-emerald-500/20">System Live</span>
+                <span id="system-status" class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs rounded-full border border-emerald-500/20">System Live</span>
             </div>
         </header>
 
@@ -23,58 +31,136 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center">
                 <p class="text-slate-500 text-xs uppercase">Total Orders</p>
-                <p class="text-xl font-bold">1</p>
+                <p id="total-count" class="text-xl font-bold">0</p>
             </div>
             <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center text-yellow-400">
                 <p class="text-slate-500 text-xs uppercase">Pending</p>
-                <p class="text-xl font-bold">1</p>
+                <p id="pending-count" class="text-xl font-bold">0</p>
             </div>
         </div>
 
         <!-- Order List Section -->
-        <h2 class="text-lg font-bold mb-4 text-slate-300 px-2">📦 Current Orders</h2>
+        <div class="flex justify-between items-center mb-4 px-2">
+            <h2 class="text-lg font-bold text-slate-300">📦 Order Notebook</h2>
+            <button onclick="fetchOrders()" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg transition-all">🔄 Refresh</button>
+        </div>
         
-        <div id="order-list" class="space-y-4">
-            <!-- Order Card -->
-            <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-lg">
-                <div class="p-5 flex justify-between items-start border-b border-slate-700/50">
-                    <div>
-                        <h3 class="font-bold text-lg text-slate-100">Customer: မောင်မောင်</h3>
-                        <p class="text-sm text-slate-400">📞 09-123456789</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-xs text-slate-500 mb-1 font-mono uppercase">Order Status</p>
-                        <select onchange="updateStatus(this)" class="bg-slate-900 text-xs border border-slate-600 rounded-lg px-3 py-1.5 text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                            <option value="pending" selected>🟡 Pending</option>
-                            <option value="confirmed">🟢 Confirmed</option>
-                            <option value="delivered">🔵 Delivered</option>
-                            <option value="cancelled">🔴 Cancelled</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="p-5">
-                    <div class="flex justify-between items-center mb-3">
-                        <span class="text-sm font-medium text-slate-400">Order Summary:</span>
-                        <span class="text-lg font-bold text-emerald-400">45,000 MMK</span>
-                    </div>
-                    <div class="p-4 bg-slate-900/80 rounded-xl border border-slate-700/50 text-sm leading-relaxed text-slate-300">
-                        • အနွေးထည် (အနက်) - ၁ ထည် <br>
-                        • တီရှပ် (အဖြူ) - ၂ ထည် <br>
-                        <hr class="my-2 border-slate-700">
-                        <span class="text-xs text-slate-500 italic">Address: လှိုင်မြို့နယ်၊ ရန်ကုန်။</span>
-                    </div>
-                </div>
-
-                <div class="p-4 bg-slate-800/50 flex gap-3">
-                    <button onclick="confirmAction()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-sm font-bold shadow-lg shadow-emerald-900/20 transition-all active:scale-95">
-                        CONFIRM & SEND NOTIFICATION
-                    </button>
-                </div>
-            </div>
+        <!-- တကယ့် Data တွေဝင်မယ့်နေရာ -->
+        <div id="order-list" class="space-y-6">
+            <div class="text-center py-10 text-slate-500">Orders များအား ဆွဲယူနေပါသည်...</div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // Backend URL (ခင်ဗျားရဲ့ Web Service URL)
+        const API_URL = 'https://sellmate-ai-dashboard-backend.onrender.com';
+        const TENANT_ID = 1;
+
+        // Page စဖွင့်တာနဲ့ Data ယူမယ်
+        document.addEventListener('DOMContentLoaded', fetchOrders);
+
+        async function fetchOrders() {
+            try {
+                const response = await fetch(`${API_URL}/orders?tenant_id=${TENANT_ID}`);
+                const orders = await response.json();
+                
+                renderOrders(orders);
+                updateStats(orders);
+            } catch (error) {
+                console.error("Error fetching orders:", error);
+                document.getElementById('order-list').innerHTML = `<div class="text-red-400 text-center">Server ချိတ်ဆက်မှု မအောင်မြင်ပါဘူး။</div>`;
+            }
+        }
+
+        function renderOrders(orders) {
+            const orderList = document.getElementById('order-list');
+            orderList.innerHTML = '';
+
+            if (orders.length === 0) {
+                orderList.innerHTML = '<div class="text-center py-10 text-slate-500">အော်ဒါ မရှိသေးပါ။</div>';
+                return;
+            }
+
+            orders.forEach(order => {
+                const card = `
+                <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-lg hover:border-slate-500 transition-all">
+                    <div class="p-5 flex justify-between items-start border-b border-slate-700/50">
+                        <div>
+                            <h3 class="font-bold text-lg text-slate-100">Customer: ${order.customer_name}</h3>
+                            <p class="text-sm text-slate-400">📞 ${order.phone}</p>
+                            <p class="text-[10px] text-slate-500 mt-1 uppercase">ID: #${order.id} | ${new Date(order.created_at).toLocaleString()}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-slate-500 mb-1 font-mono uppercase">Status</p>
+                            <select onchange="updateStatus(this, ${order.id})" class="bg-slate-900 text-xs border border-slate-600 rounded-lg px-3 py-1.5 focus:outline-none" style="color: ${getStatusColor(order.status)}">
+                                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>🟡 Pending</option>
+                                <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>🟢 Confirmed</option>
+                                <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>🔵 Delivered</option>
+                                <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>🔴 Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="p-5">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-sm font-medium text-slate-400">Order Summary:</span>
+                            <span class="text-lg font-bold text-emerald-400">${Number(order.total_price).toLocaleString()} MMK</span>
+                        </div>
+                        <div class="p-4 bg-slate-900/80 rounded-xl border border-slate-700/50 text-sm leading-relaxed text-slate-300">
+                            <div class="whitespace-pre-line">${order.items}</div>
+                            <hr class="my-2 border-slate-700">
+                            <span class="text-xs text-slate-500 italic">📍 Address: ${order.address || 'လိပ်စာမရှိပါ'}</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-800/50 flex gap-3">
+                        <button onclick="confirmAction(${order.id}, this)" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95">
+                            CONFIRM & SEND NOTIFICATION
+                        </button>
+                    </div>
+                </div>`;
+                orderList.innerHTML += card;
+            });
+        }
+
+        async function updateStatus(selectElement, orderId) {
+            const newStatus = selectElement.value;
+            selectElement.style.color = getStatusColor(newStatus);
+
+            try {
+                await fetch(`${API_URL}/orders/${orderId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+            } catch (err) {
+                alert("Update လုပ်လို့ မရပါဘူး။");
+            }
+        }
+
+        async function confirmAction(orderId, btn) {
+            if(confirm("ဒီအော်ဒါကို Confirmed ပြောင်းမလား?")) {
+                const response = await fetch(`${API_URL}/orders/${orderId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'confirmed' })
+                });
+                if(response.ok) {
+                    alert("Order Confirmed!");
+                    fetchOrders(); // List ကို ပြန် Update လုပ်မယ်
+                }
+            }
+        }
+
+        function getStatusColor(status) {
+            const colors = { 'pending': '#fbbf24', 'confirmed': '#10b981', 'delivered': '#3b82f6', 'cancelled': '#ef4444' };
+            return colors[status] || '#10b981';
+        }
+
+        function updateStats(orders) {
+            document.getElementById('total-count').innerText = orders.length;
+            document.getElementById('pending-count').innerText = orders.filter(o => o.status === 'pending').length;
+        }
+    </script>
 </body>
 </html>
