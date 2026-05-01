@@ -3,100 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SellMate AI | Your Smart Sales Assistant</title>
+    <title>SellMate AI | Intelligent Sales Assistant</title>
+    <!-- Spline Viewer Script (ဒါက Robot ကို အသက်သွင်းပေးမှာပါ) -->
+    <script type="module" src="https://unpkg.com/@splinetool/viewer@1.12.50/build/spline-viewer.js"></script>
+    
     <style>
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden; /* Scroll မဖြစ်အောင် */
-            background-color: #f0f2f5; /* ခင်ဗျား Design နဲ့ လိုက်မယ့် အရောင် */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background-color: #f8fafc;
+            font-family: 'Inter', sans-serif;
         }
 
-        .hero-container {
+        .container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
 
-        /* Spline Bot ကို Background အနေနဲ့ ထားတာ */
-        .spline-viewer {
-            position: absolute;
-            top: 0;
-            left: 0;
+        /* 3D Robot နေရာချခြင်း */
+        spline-viewer {
             width: 100%;
             height: 100%;
-            z-index: 1;
         }
 
-        /* အပေါ်က စာသားနဲ့ UI အပိုင်း */
-        .overlay-ui {
+        /* UI Overlay - စာသားနဲ့ ခလုတ်များ */
+        .content {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 2;
-            pointer-events: none; /* Bot ကို ထိလို့ရအောင် စာသားလွှာကို ဖြတ်သွားခိုင်းတာ */
+            z-index: 10;
+            pointer-events: none; /* Robot ကို Mouse နဲ့ ကိုင်လို့ရအောင် */
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: 40px;
+            padding: 50px;
             box-sizing: border-box;
         }
 
-        .nav-bar {
+        .nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            pointer-events: auto;
+            pointer-events: auto; /* Nav ကိုတော့ နှိပ်လို့ရအောင် */
         }
 
         .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
+            font-size: 28px;
+            font-weight: 800;
+            color: #1e293b;
+            letter-spacing: -1px;
         }
 
-        .cta-button {
-            background-color: #6366f1;
+        .btn-start {
+            background: #6366f1;
             color: white;
-            padding: 12px 24px;
-            border-radius: 30px;
+            padding: 14px 28px;
+            border-radius: 12px;
             text-decoration: none;
             font-weight: 600;
-            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            transition: 0.3s ease;
         }
 
-        .cta-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        .btn-start:hover {
+            transform: translateY(-2px);
+            background: #4f46e5;
         }
     </style>
 </head>
 <body>
 
-    <div class="hero-container">
-        <!-- Spline Bot Embedding -->
-        <iframe src="https://my.spline.design/r4xbot-n5HbgkSkdJQsrMy0EHMOcile/" 
-                frameborder="0" 
-                width="100%" 
-                height="100%" 
-                class="spline-viewer">
-        </iframe>
+    <div class="container">
+        <!-- 🤖 ခင်ဗျားရဲ့ Spline Bot ကို ဒီမှာ ထည့်ထားပါတယ် -->
+        <spline-viewer url="https://prod.spline.design/10vjLux-4sfZPdcD/scene.splinecode"></spline-viewer>
 
-        <!-- Overlay UI Elements -->
-        <div class="overlay-ui">
-            <div class="nav-bar">
+        <!-- ရှေ့က UI လွှာ -->
+        <div class="content">
+            <div class="nav">
                 <div class="logo">SellMate AI</div>
-                <a href="#" class="cta-button">Get Started</a>
+                <a href="#" class="btn-start">Launch Dashboard</a>
             </div>
-
-            <!-- အောက်ခြေမှာ တစ်ခုခု ထည့်ချင်ရင် ဒီမှာ ထည့်လို့ရတယ် -->
-            <div style="color: #666; font-size: 14px;">
-                © 2026 SellMate AI. Powered by Spline & Founder's Vision.
+            
+            <div style="margin-top: auto; color: #94a3b8; font-size: 14px; pointer-events: auto;">
+                Built with Vision by Founder. © 2026
             </div>
         </div>
     </div>
